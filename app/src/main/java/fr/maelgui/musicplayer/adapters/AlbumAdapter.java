@@ -66,7 +66,7 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.MyViewHolder
                 @Override
                 public void onClick(View view) {
                     new AlertDialog.Builder(itemView.getContext())
-                            .setTitle(currAlbum.getName())
+                            .setTitle(currAlbum.getTitle())
                             .setMessage(currAlbum.getArtist())
                             .show();
                 }
@@ -79,7 +79,7 @@ public class AlbumAdapter extends RecyclerView.Adapter<AlbumAdapter.MyViewHolder
                 albumArt.setImageURI(Uri.parse(currAlbum.getArt()));
             else
                 albumArt.setImageResource(R.drawable.default_album);
-            albumName.setText(album.getName());
+            albumName.setText(album.getTitle());
             albumArtist.setText(album.getArtist());
         }
     }

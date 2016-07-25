@@ -1,5 +1,14 @@
 package fr.maelgui.musicplayer;
 
+import android.content.ComponentName;
+import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -11,6 +20,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,6 +28,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.TextView;
+
+import java.util.ArrayList;
+
+import fr.maelgui.musicplayer.fragments.AlbumFragment;
+import fr.maelgui.musicplayer.fragments.ArtistFragment;
+import fr.maelgui.musicplayer.fragments.SongFragment;
+import fr.maelgui.musicplayer.models.Album;
+import fr.maelgui.musicplayer.models.Artist;
+import fr.maelgui.musicplayer.models.Song;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -30,12 +49,41 @@ public class MainActivity extends AppCompatActivity {
      * {@link android.support.v4.app.FragmentStatePagerAdapter}.
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
+    private MusicService musicSrv;
+    private Intent playIntent;
+    private boolean musicBound=false;
 
     /**
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
 
+
+
+    //connect to the service
+    private ServiceConnection musicConnection = new ServiceConnection(){
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
+            //get service
+            musicSrv = binder.getService();
+            //pass list
+
+            musicBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            musicBound = false;
+        }
+    };
+
+    public void play(ArrayList songList, int position) {
+        musicSrv.setList(songList);
+        musicSrv.setSong(position);
+        musicSrv.playSong();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,8 +113,20 @@ public class MainActivity extends AppCompatActivity {
         });
         */
 
+        super.onStart();
+        if(playIntent==null){
+            playIntent = new Intent(this, MusicService.class);
+            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            startService(playIntent);
+        }
     }
 
+    @Override
+    protected void onDestroy() {
+        stopService(playIntent);
+        musicSrv = null;
+        super.onDestroy();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -82,9 +142,16 @@ public class MainActivity extends AppCompatActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (item.getItemId()) {
+            case R.id.action_shuffle:
+                item.setChecked(!item.isChecked());
+                musicSrv.setShuffle(item.isChecked());
+                break;
+            case R.id.action_end:
+                stopService(playIntent);
+                musicSrv=null;
+                System.exit(0);
+                break;
         }
 
         return super.onOptionsItemSelected(item);
@@ -105,23 +172,11 @@ public class MainActivity extends AppCompatActivity {
             //Returning the current tabs
             switch (position) {
                 case 0:
-                    Bundle bundleSongs = new Bundle();
-                    bundleSongs.putString("type", "Songs");
-                    MediaBrowserFragment songsFragment = new MediaBrowserFragment();
-                    songsFragment.setArguments(bundleSongs);
-                    return songsFragment;
+                    return new SongFragment();
                 case 1:
-                    Bundle bundleArtists = new Bundle();
-                    bundleArtists.putString("type", "Artists");
-                    MediaBrowserFragment artistsFragment = new MediaBrowserFragment();
-                    artistsFragment.setArguments(bundleArtists);
-                    return artistsFragment;
+                    return new ArtistFragment();
                 case 2:
-                    Bundle bundleAlbums = new Bundle();
-                    bundleAlbums.putString("type", "Albums");
-                    MediaBrowserFragment albumsFragment = new MediaBrowserFragment();
-                    albumsFragment.setArguments(bundleAlbums);
-                    return albumsFragment;
+                    return new AlbumFragment();
                 default:
                     return null;
             }
@@ -146,4 +201,5 @@ public class MainActivity extends AppCompatActivity {
             return null;
         }
     }
+
 }

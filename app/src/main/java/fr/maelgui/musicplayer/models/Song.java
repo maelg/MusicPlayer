@@ -3,7 +3,7 @@ package fr.maelgui.musicplayer.models;
 /**
  * Created by mguillos on 22/07/16.
  */
-public class Song extends Item {
+public class Song {
     private long id;
     private String title;
     private String artist;

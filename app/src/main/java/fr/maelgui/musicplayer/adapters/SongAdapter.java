@@ -6,7 +6,9 @@ package fr.maelgui.musicplayer.adapters;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,15 +21,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import fr.maelgui.musicplayer.MainActivity;
 import fr.maelgui.musicplayer.R;
 import fr.maelgui.musicplayer.models.Song;
 
 public class SongAdapter extends RecyclerView.Adapter<SongAdapter.MyViewHolder> {
 
     private ArrayList<Song> songs;
+    private Context mContext;
 
-    public SongAdapter( ArrayList<Song> theSongs){
+    public SongAdapter( ArrayList<Song> theSongs, Context context){
         songs = theSongs;
+        mContext = context;
     }
 
     @Override
@@ -45,11 +50,12 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.MyViewHolder> 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
         Song song = songs.get(position);
-        holder.display(song);
+        holder.display(song, position);
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
+        private final View view;
         private final ImageView songAlbumArt;
         private final TextView songName;
         private final TextView songArtist;
@@ -58,6 +64,7 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.MyViewHolder> 
 
         public MyViewHolder(final View itemView) {
             super(itemView);
+            view = itemView;
 
             songAlbumArt = (ImageView)itemView.findViewById(R.id.albumArt);
             songName = (TextView)itemView.findViewById(R.id.song_title);
@@ -66,19 +73,17 @@ public class SongAdapter extends RecyclerView.Adapter<SongAdapter.MyViewHolder> 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    new AlertDialog.Builder(itemView.getContext())
-                            .setTitle(currSong.getTitle())
-                            .setMessage(currSong.getArtist())
-                            .show();
+                    ((MainActivity) mContext).play(songs, Integer.parseInt(view.getTag().toString()));
                 }
             });
         }
 
-        public void display(Song song) {
+        public void display(Song song, int position) {
             currSong = song;
             songAlbumArt.setImageResource(R.drawable.default_album);
             songName.setText(song.getTitle());
             songArtist.setText(song.getArtist());
+            view.setTag(position);
         }
     }
 
