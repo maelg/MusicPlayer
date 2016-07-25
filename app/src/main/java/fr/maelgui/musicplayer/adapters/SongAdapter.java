@@ -1,63 +1,85 @@
 package fr.maelgui.musicplayer.adapters;
 
+/**
+ * Created by mguillos on 25/07/16.
+ */
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.support.v7.widget.RecyclerView;
+import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
-import java.util.ArrayList;
-import android.content.Context;
-import android.view.LayoutInflater;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import fr.maelgui.musicplayer.R;
 import fr.maelgui.musicplayer.models.Song;
 
-/**
- * Created by mguillos on 22/07/16.
- */
-public class SongAdapter extends BaseAdapter {
+public class SongAdapter extends RecyclerView.Adapter<SongAdapter.MyViewHolder> {
 
     private ArrayList<Song> songs;
-    private LayoutInflater songInf;
 
-    public SongAdapter(Context c, ArrayList<Song> theSongs){
+    public SongAdapter( ArrayList<Song> theSongs){
         songs = theSongs;
-        songInf = LayoutInflater.from(c);
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
         return songs.size();
     }
 
     @Override
-    public Object getItem(int i) {
-        return null;
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View view = inflater.inflate(R.layout.item_song, parent, false);
+        return new MyViewHolder(view);
     }
 
     @Override
-    public long getItemId(int i) {
-        return 0;
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+        Song song = songs.get(position);
+        holder.display(song);
     }
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        //map to song layout
-        LinearLayout songLay = (LinearLayout)songInf.inflate
-                (R.layout.item_song, parent, false);
-        //get title and artist views
-        ImageView albumArtView = (ImageView)songLay.findViewById(R.id.albumArt);
-        TextView songView = (TextView)songLay.findViewById(R.id.song_title);
-        TextView artistView = (TextView)songLay.findViewById(R.id.song_artist);
-        //get song using position
-        Song currSong = songs.get(position);
-        //get title and artist strings
-        albumArtView.setImageResource(R.drawable.default_album);
-        songView.setText(currSong.getTitle());
-        artistView.setText(currSong.getArtist());
-        //set position as tag
-        songLay.setTag(position);
-        return songLay;
+    public class MyViewHolder extends RecyclerView.ViewHolder {
+
+        private final ImageView songAlbumArt;
+        private final TextView songName;
+        private final TextView songArtist;
+
+        private Song currSong;
+
+        public MyViewHolder(final View itemView) {
+            super(itemView);
+
+            songAlbumArt = (ImageView)itemView.findViewById(R.id.albumArt);
+            songName = (TextView)itemView.findViewById(R.id.song_title);
+            songArtist = (TextView)itemView.findViewById(R.id.song_artist);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    new AlertDialog.Builder(itemView.getContext())
+                            .setTitle(currSong.getTitle())
+                            .setMessage(currSong.getArtist())
+                            .show();
+                }
+            });
+        }
+
+        public void display(Song song) {
+            currSong = song;
+            songAlbumArt.setImageResource(R.drawable.default_album);
+            songName.setText(song.getTitle());
+            songArtist.setText(song.getArtist());
+        }
     }
+
 }

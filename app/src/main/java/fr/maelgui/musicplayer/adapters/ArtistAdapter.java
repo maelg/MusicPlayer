@@ -1,12 +1,12 @@
 package fr.maelgui.musicplayer.adapters;
 
+import android.app.AlertDialog;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import java.util.ArrayList;
-import android.content.Context;
 import android.view.LayoutInflater;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import fr.maelgui.musicplayer.R;
@@ -15,48 +15,67 @@ import fr.maelgui.musicplayer.models.Artist;
 /**
  * Created by mguillos on 22/07/16.
  */
-public class ArtistAdapter extends BaseAdapter {
+public class ArtistAdapter extends RecyclerView.Adapter<ArtistAdapter.MyViewHolder> {
 
     private ArrayList<Artist> artists;
-    private LayoutInflater artistInf;
 
-    public ArtistAdapter(Context c, ArrayList<Artist> theArtists){
-        artists = theArtists;
-        artistInf = LayoutInflater.from(c);
+    public ArtistAdapter( ArrayList<Artist> artistsList){
+        artists = artistsList;
     }
 
     @Override
-    public int getCount() {
+    public int getItemCount() {
         return artists.size();
     }
 
     @Override
-    public Object getItem(int i) {
-        return null;
+    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View view = inflater.inflate(R.layout.item_artist, parent, false);
+        return new MyViewHolder(view);
     }
 
     @Override
-    public long getItemId(int i) {
-        return 0;
+    public void onBindViewHolder(MyViewHolder holder, int position) {
+        Artist artist = artists.get(position);
+        holder.display(artist);
     }
 
-    @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        //map to song layout
-        LinearLayout artistLay = (LinearLayout)artistInf.inflate
-                (R.layout.item_artist, parent, false);
-        //get title and artist views
-        TextView artistNameView = (TextView)artistLay.findViewById(R.id.artist_name);
-        TextView artistNbrTracksView = (TextView)artistLay.findViewById(R.id.artist_nbr_tracks);
-        TextView artistNbrAlbumsView = (TextView)artistLay.findViewById(R.id.artist_nbr_albums);
-        //get song using position
-        Artist currArtist = artists.get(position);
-        //get title and artist strings
-        artistNameView.setText(currArtist.getName());
-        artistNbrAlbumsView.setText(currArtist.getNbrAlbums());
-        artistNbrTracksView.setText(currArtist.getNbrTracks());
-        //set position as tag
-        artistLay.setTag(position);
-        return artistLay;
+    public class MyViewHolder extends RecyclerView.ViewHolder {
+
+        private final ImageView artistAlbumArt;
+        private final TextView artistName;
+        private final TextView artistNbrTracks;
+        private final TextView artistNbrAlbums;
+
+        private Artist currArtist;
+
+        public MyViewHolder(final View itemView) {
+            super(itemView);
+
+            artistAlbumArt = (ImageView)itemView.findViewById(R.id.albumArt);
+            artistName = (TextView)itemView.findViewById(R.id.artist_name);
+            artistNbrTracks = (TextView)itemView.findViewById(R.id.artist_nbr_tracks);
+            artistNbrAlbums = (TextView)itemView.findViewById(R.id.artist_nbr_albums);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    new AlertDialog.Builder(itemView.getContext())
+                            .setTitle(currArtist.getName())
+                            .setMessage(currArtist.getNbrAlbums())
+                            .show();
+                }
+            });
+        }
+
+        public void display(Artist artist) {
+            currArtist = artist;
+            artistAlbumArt.setImageResource(R.drawable.default_album);
+            artistName.setText(currArtist.getName());
+            artistNbrAlbums.setText(currArtist.getNbrAlbums());
+            artistNbrTracks.setText(currArtist.getNbrTracks());
+        }
     }
+
 }

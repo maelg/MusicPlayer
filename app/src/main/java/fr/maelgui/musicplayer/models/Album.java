@@ -3,7 +3,7 @@ package fr.maelgui.musicplayer.models;
 /**
  * Created by mguillos on 23/07/16.
  */
-public class Album {
+public class Album extends Item {
     private String name;
     private String art;
     private String id;
@@ -36,5 +36,10 @@ public class Album {
 
     public String getArtist() {
         return artist;
+    }
+
+    @Override
+    public String getTitle() {
+        return name;
     }
 }

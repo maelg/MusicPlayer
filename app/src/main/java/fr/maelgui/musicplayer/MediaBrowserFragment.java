@@ -1,11 +1,15 @@
 package fr.maelgui.musicplayer;
 
+import android.content.ClipData;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,18 +23,18 @@ import java.util.Comparator;
 import fr.maelgui.musicplayer.adapters.AlbumAdapter;
 import fr.maelgui.musicplayer.adapters.ArtistAdapter;
 import fr.maelgui.musicplayer.adapters.SongAdapter;
+import fr.maelgui.musicplayer.models.Album;
 import fr.maelgui.musicplayer.models.Artist;
 import fr.maelgui.musicplayer.models.Song;
-import fr.maelgui.musicplayer.models.Album;
+import fr.maelgui.musicplayer.models.Item;
+
 
 /**
  * Created by mguillos on 22/07/16.
  */
 public class MediaBrowserFragment extends Fragment {
 
-    private ArrayList<Song> songsList;
-    private ArrayList<Artist> artistsList;
-    private ArrayList<Album> albumsList;
+    private ArrayList itemList;
     private ListView listView;
 
 
@@ -39,72 +43,41 @@ public class MediaBrowserFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         String type =  getArguments().getString("type");
-        int fragment = -1;
+
+        itemList = new ArrayList();
+
+        View view = inflater.inflate(R.layout.fragment_recycler, container, false);
+        final RecyclerView rv = (RecyclerView) view.findViewById(R.id.list);
+        rv.setLayoutManager(new LinearLayoutManager(getActivity()));
+
 
         switch (type) {
             case "Songs":
-                fragment = R.layout.fragment_main_list;
-                break;
-
-            case "Artists":
-                fragment = R.layout.fragment_main_list;
-                break;
-
-            case "Albums":
-                fragment = R.layout.fragment_main_grid;
-                break;
-        }
-
-        View view = inflater.inflate(fragment, container, false);
-        listView = (ListView) view.findViewById(R.id.item_list);
-
-        switch (type) {
-            case "Songs":
-                songsList = new ArrayList<Song>();
 
                 getSongList();
 
-                Collections.sort(songsList, new Comparator<Song>(){
-                    public int compare(Song a, Song b){
-                        return a.getTitle().compareTo(b.getTitle());
-                    }
-                });
+                rv.setAdapter(new SongAdapter(itemList));
 
-                SongAdapter songAdt = new SongAdapter(getActivity(), songsList);
-                listView.setAdapter(songAdt);
                 break;
 
             case "Artists":
-                artistsList = new ArrayList<Artist>();
-
                 getArtistList();
 
-                Collections.sort(artistsList, new Comparator<Artist>(){
-                    public int compare(Artist a, Artist b){
-                        return a.getName().compareTo(b.getName());
-                    }
-                });
-
-                ArtistAdapter artistAdt = new ArtistAdapter(getActivity(), artistsList);
-                listView.setAdapter(artistAdt);
+                rv.setAdapter(new ArtistAdapter(itemList));
                 break;
 
             case "Albums":
-                GridView gridView = (GridView) view.findViewById(R.id.item_grid);
-                albumsList = new ArrayList<Album>();
-
                 getAlbumList();
-
-                Collections.sort(albumsList, new Comparator<Album>(){
-                    public int compare(Album a, Album b){
-                        return a.getName().compareTo(b.getName());
-                    }
-                });
-
-                AlbumAdapter albumAdt = new AlbumAdapter(getActivity(), albumsList);
-                gridView.setAdapter(albumAdt);
+                rv.setAdapter(new AlbumAdapter(itemList));
+                rv.setLayoutManager(new GridLayoutManager(getActivity(), 2));
                 break;
         }
+
+        Collections.sort(itemList, new Comparator<Item>(){
+            public int compare(Item a, Item b){
+                return a.getTitle().compareTo(b.getTitle());
+            }
+        });
 
         return view;
     }
@@ -128,7 +101,7 @@ public class MediaBrowserFragment extends Fragment {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                songsList.add(new Song(thisId, thisTitle, thisArtist));
+                itemList.add(new Song(thisId, thisTitle, thisArtist));
             }
             while (musicCursor.moveToNext());
         }
@@ -153,7 +126,7 @@ public class MediaBrowserFragment extends Fragment {
                 String thisName = musicCursor.getString(nameColumn);
                 String thisNbrAlbums = musicCursor.getString(nbrAlbumsColumn);
                 String thisNbrTracks = musicCursor.getString(nbrTracksColumn);
-                artistsList.add(new Artist(thisName, thisNbrAlbums, thisNbrTracks));
+                itemList.add(new Artist(thisName, thisNbrAlbums, thisNbrTracks));
             }
             while (musicCursor.moveToNext());
         }
@@ -178,7 +151,7 @@ public class MediaBrowserFragment extends Fragment {
                 String thisName = musicCursor.getString(nameColumn);
                 String thisArt = musicCursor.getString(artColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                albumsList.add(new Album(thisName, thisArt, thisArtist));
+                itemList.add(new Album(thisName, thisArt, thisArtist));
             }
             while (musicCursor.moveToNext());
         }
